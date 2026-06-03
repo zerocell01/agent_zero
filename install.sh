@@ -73,10 +73,11 @@ info "Python terdeteksi: $PY ($PYVER)"
 $PY -c 'import sys; raise SystemExit(0 if sys.version_info[:2] >= (3,9) else 1)' || {
   err "Butuh Python 3.9+ (disarankan 3.10+). Versi sekarang: $PYVER"; exit 1; }
 
-# pastikan modul venv tersedia
-if ! $PY -c 'import venv' >/dev/null 2>&1; then
-  warn "Modul venv belum ada, mencoba memasang python3-venv..."
-  pkg_install python3-venv || warn "Tidak bisa pasang otomatis; lanjut mencoba."
+# pastikan venv + ensurepip tersedia.
+# Di Debian/Ubuntu butuh paket python3.X-venv (mis. python3.12-venv) yang berisi ensurepip.
+if ! $PY -c 'import ensurepip, venv' >/dev/null 2>&1; then
+  warn "Paket venv/ensurepip belum lengkap, mencoba memasang python${PYVER}-venv..."
+  pkg_install "python${PYVER}-venv" || pkg_install python3-venv || warn "Tidak bisa pasang otomatis; akan dicoba lagi saat membuat venv."
 fi
 # pastikan git ada (untuk update nanti)
 command -v git >/dev/null 2>&1 || pkg_install git || true
@@ -84,9 +85,22 @@ ok "Prasyarat Python siap."
 
 # ---------- 2. Virtualenv + dependency ----------
 title "2/4 Virtualenv & dependency"
+# bersihkan venv parsial (mis. sisa percobaan gagal sebelumnya)
+if [ -d ".venv" ] && [ ! -x ".venv/bin/python" ]; then
+  warn "Menemukan .venv tidak lengkap, menghapusnya..."
+  rm -rf .venv
+fi
 if [ ! -d ".venv" ]; then
   info "Membuat virtualenv (.venv)..."
-  $PY -m venv .venv || { err "Gagal membuat virtualenv."; exit 1; }
+  if ! $PY -m venv .venv; then
+    warn "Gagal membuat venv. Memasang python${PYVER}-venv lalu mencoba lagi..."
+    pkg_install "python${PYVER}-venv" || pkg_install python3-venv || true
+    rm -rf .venv
+    $PY -m venv .venv || {
+      err "Tetap gagal membuat virtualenv. Jalankan manual: $SUDO apt-get install -y python${PYVER}-venv"
+      exit 1
+    }
+  fi
 fi
 # shellcheck disable=SC1091
 . .venv/bin/activate
