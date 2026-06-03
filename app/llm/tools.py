@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import Any, Callable
 
-from app.services import business, education, personal
+from app.services import business, education, personal, debt
 
 # Tipe handler: fn(user_id, **args) -> str
 HANDLERS: dict[str, Callable[..., str]] = {
@@ -27,6 +27,11 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "hapus_transaksi_usaha": business.hapus_transaksi_usaha,
     # --- Edukasi ---
     "daftar_topik_edukasi": lambda user_id: education.daftar_topik(),
+    # --- Hutang/Piutang ---
+    "catat_hutang": debt.catat_hutang,
+    "catat_piutang": debt.catat_piutang,
+    "lunasi_hutang": debt.lunasi,
+    "daftar_hutang": lambda user_id: debt.daftar(user_id),
 }
 
 
@@ -165,6 +170,39 @@ TOOLS: list[dict] = [
     _tool(
         "daftar_topik_edukasi",
         "Tampilkan daftar topik edukasi keuangan yang bisa ditanyakan pengguna.",
+        {},
+        [],
+    ),
+    # ---------------- Hutang/Piutang ----------------
+    _tool(
+        "catat_hutang",
+        "Catat hutang baru (uang yang DIPINJAM pengguna dari orang lain).",
+        {
+            "amount": _amount(),
+            "party": {"type": "string", "description": "Kepada siapa berhutang (nama)."},
+            "note": {"type": "string", "description": "Catatan opsional."},
+        },
+        ["amount"],
+    ),
+    _tool(
+        "catat_piutang",
+        "Catat piutang baru (uang yang DIPINJAMKAN pengguna ke orang lain).",
+        {
+            "amount": _amount(),
+            "party": {"type": "string", "description": "Siapa yang berhutang ke pengguna (nama)."},
+            "note": {"type": "string", "description": "Catatan opsional."},
+        },
+        ["amount"],
+    ),
+    _tool(
+        "lunasi_hutang",
+        "Tandai satu hutang/piutang sebagai lunas berdasarkan ID.",
+        {"debt_id": {"type": "integer", "description": "ID hutang/piutang."}},
+        ["debt_id"],
+    ),
+    _tool(
+        "daftar_hutang",
+        "Tampilkan daftar hutang & piutang yang masih aktif beserta totalnya.",
         {},
         [],
     ),

@@ -69,6 +69,25 @@ python bot.py
 
 Buka bot kamu di Telegram, ketik `/start`.
 
+## Menu tombol interaktif
+
+Selain mengetik bebas, bot punya **menu tombol** (inline keyboard). Ketik
+`/start` atau `/menu` untuk membuka tombol: Pemasukan, Pengeluaran, Hutang,
+Piutang, Ringkasan, Budget, Usaha, Edukasi.
+
+- Tombol **Ringkasan/Budget/Daftar Hutang** bekerja **tanpa LLM** (langsung ke
+  database) — tetap jalan walau backend AI belum dikonfigurasi.
+- Tombol input (mis. Pengeluaran) akan meminta detail; cukup kirim
+  `<jumlah> <kategori> <catatan>`, contoh: `50rb makan nasi padang`.
+
+### Tombol kustom (buat sendiri)
+
+```
+/addbutton Kopi harian | catat kopi 20rb
+```
+Tombol "Kopi harian" akan muncul di menu; saat ditekan mengirim teks tersebut.
+Kelola/hapus lewat `/buttons`.
+
 ## Contoh perintah di chat
 
 | Ketik | Hasil |
@@ -78,12 +97,15 @@ Buka bot kamu di Telegram, ketik `/start`.
 | `set budget makan 1,5jt per bulan` | mengatur budget |
 | `ringkasan bulan ini` | ringkasan keuangan pribadi |
 | `status budget` | realisasi vs budget |
+| `hutang 500rb ke budi` | mencatat hutang |
+| `piutang 200rb dari andi` | mencatat piutang |
+| `daftar hutang` | lihat hutang & piutang aktif |
 | `penjualan usaha 500rb hari ini` | mencatat pemasukan usaha |
-| `bayar bahan baku 200rb` (konteks usaha) | mencatat biaya usaha |
 | `laporan laba rugi bulan ini` | laporan laba-rugi usaha |
 | `jelaskan aturan 50/30/20` | edukasi keuangan |
 
-Perintah bot: `/start` atau `/help` (panduan), `/reset` (hapus konteks percakapan).
+Perintah bot: `/start` `/menu` (menu tombol), `/help` (panduan),
+`/addbutton` & `/buttons` (tombol kustom), `/reset` (hapus konteks).
 
 ## Deploy di VPS (systemd)
 

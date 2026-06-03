@@ -40,6 +40,24 @@ CREATE TABLE IF NOT EXISTS budgets (
     monthly_limit REAL    NOT NULL CHECK (monthly_limit >= 0),
     UNIQUE (user_id, category)
 );
+
+CREATE TABLE IF NOT EXISTS debts (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    kind       TEXT    NOT NULL CHECK (kind IN ('owe', 'lent')),  -- owe=hutang, lent=piutang
+    party      TEXT    NOT NULL DEFAULT '-',
+    amount     REAL    NOT NULL CHECK (amount >= 0),
+    note       TEXT    DEFAULT '',
+    status     TEXT    NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'paid')),
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS custom_buttons (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id  INTEGER NOT NULL,
+    label    TEXT    NOT NULL,
+    payload  TEXT    NOT NULL
+);
 """
 
 
@@ -176,3 +194,91 @@ def spent_by_category(user_id: int, start: str, end: str) -> dict[str, float]:
             (user_id, start, end),
         ).fetchall()
     return {r["category"]: float(r["total"] or 0.0) for r in rows}
+
+
+
+# ----------------------------------------------------------------------------
+# Hutang / Piutang
+# ----------------------------------------------------------------------------
+def add_debt(
+    user_id: int, kind: str, amount: float, party: str = "-", note: str = ""
+) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO debts (user_id, kind, amount, party, note)
+               VALUES (?, ?, ?, ?, ?)""",
+            (user_id, kind, float(amount), party or "-", note),
+        )
+        return int(cur.lastrowid)
+
+
+def list_debts(user_id: int, status: str = "open") -> list[sqlite3.Row]:
+    with get_conn() as conn:
+        return conn.execute(
+            """SELECT * FROM debts
+               WHERE user_id = ? AND status = ?
+               ORDER BY created_at DESC, id DESC""",
+            (user_id, status),
+        ).fetchall()
+
+
+def pay_debt(user_id: int, debt_id: int) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "UPDATE debts SET status = 'paid' WHERE id = ? AND user_id = ? AND status = 'open'",
+            (debt_id, user_id),
+        )
+        return cur.rowcount > 0
+
+
+def debt_totals(user_id: int) -> dict[str, float]:
+    """Total hutang (owe) & piutang (lent) yang masih open."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT kind, SUM(amount) AS total
+               FROM debts
+               WHERE user_id = ? AND status = 'open'
+               GROUP BY kind""",
+            (user_id,),
+        ).fetchall()
+    result = {"owe": 0.0, "lent": 0.0}
+    for r in rows:
+        result[r["kind"]] = float(r["total"] or 0.0)
+    return result
+
+
+# ----------------------------------------------------------------------------
+# Tombol kustom
+# ----------------------------------------------------------------------------
+def add_custom_button(user_id: int, label: str, payload: str) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO custom_buttons (user_id, label, payload) VALUES (?, ?, ?)",
+            (user_id, label, payload),
+        )
+        return int(cur.lastrowid)
+
+
+def list_custom_buttons(user_id: int) -> list[sqlite3.Row]:
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT id, label, payload FROM custom_buttons WHERE user_id = ? ORDER BY id",
+            (user_id,),
+        ).fetchall()
+
+
+def get_custom_button(user_id: int, button_id: int) -> sqlite3.Row | None:
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT id, label, payload FROM custom_buttons WHERE id = ? AND user_id = ?",
+            (button_id, user_id),
+        ).fetchone()
+
+
+def delete_custom_button(user_id: int, button_id: int) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "DELETE FROM custom_buttons WHERE id = ? AND user_id = ?",
+            (button_id, user_id),
+        )
+        return cur.rowcount > 0
