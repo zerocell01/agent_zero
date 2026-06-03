@@ -1,0 +1,17 @@
+[Unit]
+Description=Hermes Finance Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Sesuaikan user dan path di bawah dengan setup VPS kamu
+User=ubuntu
+WorkingDirectory=/home/ubuntu/hermes-finance-bot
+ExecStart=/home/ubuntu/hermes-finance-bot/.venv/bin/python bot.py
+EnvironmentFile=/home/ubuntu/hermes-finance-bot/.env
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
