@@ -35,6 +35,20 @@ Telegram  ──►  bot.py  ──►  Hermes (LLM)  ──► tools (function 
 
 ## Setup
 
+### Cara cepat (installer otomatis) — disarankan
+
+Setelah repo ada di VPS, dari dalam folder repo jalankan:
+
+```bash
+bash install.sh
+```
+
+Installer menanyakan token Telegram, API key 9Router, dan model (default gratis
+`kr/claude-sonnet-4.5`), lalu menjalankan bot via pm2. Panduan pemula langkah demi
+langkah ada di [`PANDUAN.md`](PANDUAN.md). Untuk update: `bash update.sh`.
+
+### Cara manual
+
 ```bash
 git clone <repo-ini> hermes-finance-bot
 cd hermes-finance-bot

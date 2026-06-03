@@ -17,6 +17,33 @@ perintah. Targetnya: bot Telegram asisten keuangan jalan di **VPS** kamu
 
 ---
 
+## 🚀 Cara Paling Mudah: Installer Otomatis
+
+Repo sudah ke-clone di VPS, jadi cukup jalankan **2 perintah** ini di dalam
+folder repo (mis. `~/agent_zero`):
+
+```bash
+git pull
+bash install.sh
+```
+
+Installer akan otomatis: cek prasyarat, buat virtualenv, install dependency,
+lalu **menanyakan 3 hal** (tinggal jawab):
+
+1. **Token Telegram** (dari @BotFather — lihat Langkah 1)
+2. **API key 9Router** (dari dashboard `http://localhost:20128` — lihat Langkah 5)
+3. **Nama model** (tekan Enter untuk default gratis `kr/claude-sonnet-4.5`)
+
+Setelah itu installer menjalankan bot dengan **pm2** (nyala 24 jam). Buka Telegram,
+ketik `/start`. Selesai! 🎉
+
+> Mau update di kemudian hari? Jalankan `bash update.sh`.
+>
+> Bagian manual di bawah ini hanya untuk referensi kalau kamu ingin paham
+> tiap langkahnya atau installer gagal.
+
+---
+
 ## ⚡ Jalur Cepat (kamu sudah punya 9Router)
 
 Karena 9Router sudah jalan di VPS, kamu bisa lewati instalasi 9Router:

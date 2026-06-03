@@ -1,4 +1,6 @@
 """Konfigurasi aplikasi, dibaca dari environment variables (.env)."""
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass, field
 
